@@ -1,0 +1,35 @@
+{
+  "name": "gitstore-d",
+  "version": "1.0.0",
+  "description": "使用node提取git仓库的下载工具，支持 GitHub，Gitee，GitLab，Bitbucket",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "xin",
+    "email": "2916733574@qq.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "download",
+    "git",
+    "github",
+    "gitee",
+    "gitlab",
+    "bitbucket",
+    "repo",
+    "repository",
+    "util",
+    "extract",
+    "gitdownload",
+    "store",
+    "gitclone"
+  ],
+  "dependencies": {
+    "download": "^8.0.0",
+    "git-clone": "^0.1.0",
+    "rimraf": "^3.0.2"
+  },
+  "private": false
+}
