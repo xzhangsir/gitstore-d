@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 /**
  * created by xin
  * version 1.0.0
@@ -12,31 +12,38 @@ function gitdownload(store, dest, opts = {}) {
   let clone = opts.clone || false
   store = normalize(store)
   let url = store.url || getUrl(store, clone)
+  console.log(store)
+  console.log(url)
   if (clone) {
     rm(dest)
     return new Promise((resolve, reject) => {
-      gitclone(url, dest, {
-        checkout: store.checkout,
-        shallow: store.checkout === 'master',
-        ...opts
-      }, (err) => {
-        if (err === undefined) {
-          rm(dest + '/.git*')
-          resolve(200)
-        } else {
-          reject(new Error(err))
+      gitclone(
+        url,
+        dest,
+        {
+          checkout: store.checkout,
+          shallow: store.checkout === 'master',
+          ...opts
+        },
+        (err) => {
+          if (err === undefined) {
+            rm(dest + '/.git*')
+            resolve(200)
+          } else {
+            reject(new Error(err))
+          }
         }
-      })
+      )
     })
   } else {
     return new Promise((resolve, reject) => {
       download(url, dest, {
-        extract: true,  //解压提取文件
+        extract: true //解压提取文件
       })
-        .then(_ => {
+        .then((_) => {
           resolve(200)
         })
-        .catch(err => {
+        .catch((err) => {
           reject(new Error(err))
         })
     })
@@ -51,7 +58,8 @@ function normalize(store) {
     var directCheckout = match[3] || 'master'
     return { type: 'direct', url: match[2], checkout: directCheckout }
   } else {
-    regex = /^(?:(github|gitee|gitlab|bitbucket):)?(?:(.+):)?([^/]+)\/([^#]+)(?:#(.+))?$/
+    regex =
+      /^(?:(github|gitee|gitlab|bitbucket):)?(?:(.+):)?([^/]+)\/([^#]+)(?:#(.+))?$/
     match = regex.exec(store)
     var type = match[1] || 'github'
     var origin = match[2] || null
@@ -78,11 +86,11 @@ function normalize(store) {
 function addProtocol({ origin, type }, clone) {
   if (!/^(f|ht)tps?:\/\//i.test(origin)) {
     if (clone) {
-      if (type == "gitee") {
-        origin = 'https://' + origin
-      } else {
-        origin = 'git@' + origin
-      }
+      // if (type == 'gitee') {
+      //   origin = 'https://' + origin
+      // } else {
+      origin = 'git@' + origin
+      // }
     } else {
       origin = 'https://' + origin
     }
@@ -98,18 +106,37 @@ function getUrl(repo, clone) {
     url = origin + repo.owner + '/' + repo.name + '.git'
   } else {
     if (repo.type === 'github') {
-      url = origin + repo.owner + '/' + repo.name + '/archive/' + repo.checkout + '.zip'
+      url =
+        origin +
+        repo.owner +
+        '/' +
+        repo.name +
+        '/archive/refs/heads/' +
+        repo.checkout +
+        '.zip'
     } else if (repo.type === 'gitee') {
-      url = origin + repo.owner + '/' + repo.name + '/repository/archive/' + repo.checkout + '.zip'
+      url =
+        origin +
+        repo.owner +
+        '/' +
+        repo.name +
+        '/repository/archive/' +
+        repo.checkout +
+        '.zip'
     } else if (repo.type === 'gitlab') {
-      url = origin + repo.owner + '/' + repo.name + '/repository/archive.zip?ref=' + repo.checkout
+      url =
+        origin +
+        repo.owner +
+        '/' +
+        repo.name +
+        '/repository/archive.zip?ref=' +
+        repo.checkout
     } else if (repo.type === 'bitbucket') {
-      url = origin + repo.owner + '/' + repo.name + '/get/' + repo.checkout + '.zip'
+      url =
+        origin + repo.owner + '/' + repo.name + '/get/' + repo.checkout + '.zip'
     }
   }
   return url
 }
 
 module.exports = gitdownload
-
-
