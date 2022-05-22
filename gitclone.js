@@ -18,9 +18,13 @@ function gitClone(opts) {
 
 gitClone([
   'clone',
-  '--depth',
-  '1',
-  'https://github.com/xzhangsir/frontend-bases.git',
+  // '-b',
+  // 'html_css',
+  // '--depth',
+  // '1',
+  // 'https://github.com/xzhangsir/frontend-bases.git',
+  // 'https://gitee.com/zxwaa/vue_object_template.git',
+  'https://gitlab.com/savadenn-public/vue',
   'test/del'
 ])
 

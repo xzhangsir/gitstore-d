@@ -30,7 +30,7 @@ function gitdownload(store, dest, opts = {}) {
             rm(dest + '/.git*')
             resolve(200)
           } else {
-            reject(new Error(err))
+            reject(err)
           }
         }
       )
@@ -53,7 +53,7 @@ function gitdownload(store, dest, opts = {}) {
 function normalize(store) {
   var regex = /^(?:(direct):([^#]+)(?:#(.+))?)$/
   var match = regex.exec(store)
-
+  console.log('match :>> ', match)
   if (match) {
     var directCheckout = match[3] || 'master'
     return { type: 'direct', url: match[2], checkout: directCheckout }
@@ -86,11 +86,11 @@ function normalize(store) {
 function addProtocol({ origin, type }, clone) {
   if (!/^(f|ht)tps?:\/\//i.test(origin)) {
     if (clone) {
-      // if (type == 'gitee') {
-      //   origin = 'https://' + origin
-      // } else {
-      origin = 'git@' + origin
-      // }
+      if (type == 'gitee') {
+        origin = 'https://' + origin
+      } else {
+        origin = 'git@' + origin
+      }
     } else {
       origin = 'https://' + origin
     }
@@ -101,7 +101,9 @@ function addProtocol({ origin, type }, clone) {
 function getUrl(repo, clone) {
   let url,
     origin = addProtocol(repo, clone) // 使用协议获取来源并添加尾部斜杠或冒号（对于ssh）
+  console.log(addProtocol(repo, clone))
   origin += /^git@/i.test(origin) ? ':' : '/'
+  console.log(origin)
   if (clone) {
     url = origin + repo.owner + '/' + repo.name + '.git'
   } else {
