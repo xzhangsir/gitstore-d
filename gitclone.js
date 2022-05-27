@@ -1,6 +1,6 @@
 const { spawn } = require('child_process')
 const rm = require('rimraf').sync
-
+const clone1 = require('./git-clone')
 function gitClone(httpUrl, targetPath, opts) {
   rm(targetPath)
   opts = opts || { delGit: true }
@@ -11,7 +11,7 @@ function gitClone(httpUrl, targetPath, opts) {
   }
 
   if (opts.shallow) {
-    args.push('--depth', '1')
+    args.push('--depth', 1)
   }
 
   args = args.concat(opts.args || [])
@@ -33,25 +33,6 @@ function gitClone(httpUrl, targetPath, opts) {
   // /^(github|gitee|gitlab|bitbucket):([^#]+)/
 }
 
-// function gitClone1(opts) {
-//    rm(opts[opts.length - 1])
-//    console.log(opts)
-//   var process = spawn('git', opts)
-//   process.on('close', function (status) {
-//     console.log(status)
-//     if (status == 0) {
-//        rm(opts[opts.length - 1] + "/.git*")
-//       // if (opts.checkout) {
-//       //   _checkout()
-//       // } else {
-//       //   cb && cb()
-//       // }
-//     } else {
-//       // cb && cb(new Error("'git clone' failed with status " + status))
-//     }
-//   })
-// }
-
 // gitClone1([
 //   'clone',
 //   // '-b',
@@ -68,9 +49,24 @@ function gitClone(httpUrl, targetPath, opts) {
 
 // export default gitClone
 
-gitClone('https://github.com/xzhangsir/frontend-bases.git', 'test/del').then(
-  (res) => {
-    console.log(res)
-  }
-)
+gitClone('https://github.com/xzhangsir/frontend-bases.git', 'test/del', {
+  delGit: false
+  // shallow: true,
+  // checkout: 'html_css'
+}).then((res) => {
+  console.log(res)
+})
+
+// clone1(
+//   'https://github.com/xzhangsir/frontend-bases.git',
+//   'test/del',
+//   {
+//     // delGit: false,
+//     shallow: true,
+//     checkout: 'html_css'
+//   },
+//   function (res) {
+//     console.log(res)
+//   }
+// )
 // console.log(123)
