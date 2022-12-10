@@ -1,7 +1,7 @@
 {
   "name": "gitstore-d",
   "version": "1.0.0",
-  "description": "使用node提取git仓库的下载工具，支持 GitHub，Gitee，GitLab，Bitbucket",
+  "description": "使用node提取git仓库的下载工具，支持 GitHub，Gitee，GitLab，Bitbucket。",
   "main": "index.js",
   "scripts": {
     "start":"node ./esbuild.config.js"
@@ -10,7 +10,15 @@
     "name": "xin",
     "email": "2916733574@qq.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xzhangsir/gitstore-d.git"
+  },
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xzhangsir/gitstore-d/issues"
+  },
+  "homepage": "https://github.com/xzhangsir/gitstore-d#readme",
   "keywords": [
     "download",
     "git",
