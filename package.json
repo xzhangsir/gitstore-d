@@ -4,7 +4,7 @@
   "description": "使用node提取git仓库的下载工具，支持 GitHub，Gitee，GitLab，Bitbucket",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start":"node ./esbuild.config.js"
   },
   "author": {
     "name": "xin",
@@ -26,10 +26,8 @@
     "store",
     "gitclone"
   ],
-  "dependencies": {
-    "download": "^8.0.0",
-    "git-clone": "^0.1.0",
-    "rimraf": "^3.0.2"
-  },
-  "private": false
+  "private": false,
+  "devDependencies": {
+    "esbuild": "^0.16.3"
+  }
 }

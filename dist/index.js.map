@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/index.js"],
+  "sourcesContent": ["import fs from 'fs'\r\nexport default function gitD(src, opts) {\r\n  return new GitD(src, opts)\r\n}\r\n\r\nclass GitD {\r\n  constructor(src, opts) {\r\n    this.src = src\r\n  }\r\n  clone() {\r\n    console.log('clone')\r\n  }\r\n}\r\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AACe,SAAR,KAAsB,KAAK,MAAM;AACtC,SAAO,IAAI,KAAK,KAAK,IAAI;AAC3B;AAEA,IAAM,OAAN,MAAW;AAAA,EACT,YAAY,KAAK,MAAM;AACrB,SAAK,MAAM;AAAA,EACb;AAAA,EACA,QAAQ;AACN,YAAQ,IAAI,OAAO;AAAA,EACrB;AACF;",
+  "names": []
+}
