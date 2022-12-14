@@ -14,53 +14,44 @@ class GitD {
     this.src = src
     this.proxy = process.env.https_proxy
     this.force = opts.force || false
-    this.repo = parse(src)
+    // this.repo = parse(src)
+    this.repo = normalize(src)
     // this.mode = opts.mode || this.repo.mode
   }
   async clone(dest) {
-    // 查看目录是不是空的
-    this._checkDirIsEmpty(dest)
+    console.log(this.repo)
+    try {
+      // 查看目录是不是空的
+      this._checkDirIsEmpty(dest)
+      await this._cloneWithGit(dest)
+    } catch (error) {
+      throw error
+    }
+
     // const { repo } = this
     // const dir = path.join(base, repo.site, repo.user, repo.name)
-    await this._cloneWithGit(dest)
+    // await this._cloneWithGit(dest)
 
     // console.log('clone')
   }
-  _checkDirIsEmpty(dir) {
+  async _checkDirIsEmpty(dir) {
     try {
-      // console.log(dir)
       const files = fs.readdirSync(dir)
-      // console.log(files)
       if (files.length > 0) {
         if (this.force) {
-          // this._info({
-          //   code: 'DEST_NOT_EMPTY',
-          //   message: `destination directory is not empty. Using options.force, continuing`
-          // })
-          console.log('目标目录不为空。使用force选项继续')
+          await exec(`rm -rf ${dir}`)
         } else {
-          // throw new DegitError(
-          //   `destination directory is not empty, aborting. Use options.force to override`,
-          //   {
-          //     code: 'DEST_NOT_EMPTY'
-          //   }
-          // )
-          console.log('目标目录不为空')
+          // throw new Error('目标目录不为空')
+          throw '目标目录不为空'
         }
-      } else {
-        // this._verbose({
-        //   code: 'DIR_IS_EMPTY',
-        //   message: `destination directory is empty`
-        // })
-        console.log('success')
       }
     } catch (err) {
       if (err.code !== 'ENOENT') throw err
     }
   }
   async _cloneWithGit(dest) {
-    // await exec(`git clone ${this.repo.url} ${dest}`)
-    await exec(`git clone https://gitee.com/zxwaa/feisen.git ${dest}`)
+    await exec(`git clone ${this.repo.url} ${dest}`)
+    // await exec(`git clone https://gitee.com/zxwaa/feisen.git ${dest}`)
     await exec(`rm -rf ${dest + '/.git*'}`)
   }
 }
@@ -72,6 +63,24 @@ const supported = new Set([
   'bitbucket',
   'git.sr.ht'
 ])
+
+// 构造下载对象
+function normalize(store) {
+  let regex =
+    /^(?:(github|gitee|gitlab|bitbucket):)?(?:(.+):)?([^/]+)\/([^#]+)(?:#(.+))?$/
+  let match = regex.exec(store)
+  let type = (match[1] || 'github').replace(/\.(com|org)$/, '')
+  let domain = match[2] || null
+  let user = match[3]
+  let name = match[4]
+  let branch = match[5] || 'main'
+
+  if (domain === null) {
+    domain = `${type}.${type === 'bitbucket' ? 'org' : 'com'}`
+  }
+  let url = `https://${domain}/${user}/${name}`
+  return { type, domain, user, name, branch, url }
+}
 
 function parse(src) {
   const match =

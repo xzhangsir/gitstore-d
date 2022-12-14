@@ -46,23 +46,26 @@ var GitD = class {
     this.src = src;
     this.proxy = process.env.https_proxy;
     this.force = opts.force || false;
-    this.repo = parse(src);
+    this.repo = normalize(src);
   }
   async clone(dest) {
-    this._checkDirIsEmpty(dest);
-    await this._cloneWithGit(dest);
+    console.log(this.repo);
+    try {
+      this._checkDirIsEmpty(dest);
+      await this._cloneWithGit(dest);
+    } catch (error) {
+      throw error;
+    }
   }
-  _checkDirIsEmpty(dir) {
+  async _checkDirIsEmpty(dir) {
     try {
       const files = import_fs.default.readdirSync(dir);
       if (files.length > 0) {
         if (this.force) {
-          console.log("\u76EE\u6807\u76EE\u5F55\u4E0D\u4E3A\u7A7A\u3002\u4F7F\u7528force\u9009\u9879\u7EE7\u7EED");
+          await exec(`rm -rf ${dir}`);
         } else {
-          console.log("\u76EE\u6807\u76EE\u5F55\u4E0D\u4E3A\u7A7A");
+          throw "\u76EE\u6807\u76EE\u5F55\u4E0D\u4E3A\u7A7A";
         }
-      } else {
-        console.log("success");
       }
     } catch (err) {
       if (err.code !== "ENOENT")
@@ -70,37 +73,22 @@ var GitD = class {
     }
   }
   async _cloneWithGit(dest) {
-    await exec(`git clone https://gitee.com/zxwaa/feisen.git ${dest}`);
+    await exec(`git clone ${this.repo.url} ${dest}`);
     await exec(`rm -rf ${dest + "/.git*"}`);
   }
 };
-var supported = /* @__PURE__ */ new Set([
-  "github",
-  "gitee",
-  "gitlab",
-  "bitbucket",
-  "git.sr.ht"
-]);
-function parse(src) {
-  const match = /^(?:(?:https:\/\/)?([^:/]+\.[^:/]+)\/|git@([^:/]+)[:/]|([^/]+):)?([^/\s]+)\/([^/\s#]+)(?:((?:\/[^/\s#]+)+))?(?:\/)?(?:#(.+))?/.exec(
-    src
-  );
-  if (!match) {
+function normalize(store) {
+  let regex = /^(?:(github|gitee|gitlab|bitbucket):)?(?:(.+):)?([^/]+)\/([^#]+)(?:#(.+))?$/;
+  let match = regex.exec(store);
+  let type = (match[1] || "github").replace(/\.(com|org)$/, "");
+  let domain = match[2] || null;
+  let user = match[3];
+  let name = match[4];
+  let branch = match[5] || "main";
+  if (domain === null) {
+    domain = `${type}.${type === "bitbucket" ? "org" : "com"}`;
   }
-  const site = (match[1] || match[2] || match[3] || "github").replace(
-    /\.(com|org)$/,
-    ""
-  );
-  if (!supported.has(site)) {
-  }
-  const user = match[4];
-  const name = match[5].replace(/\.git$/, "");
-  const subdir = match[6];
-  const ref = match[7] || "HEAD";
-  const domain = `${site}.${site === "bitbucket" ? "org" : site === "git.sr.ht" ? "" : "com"}`;
-  const url = `https://${domain}/${user}/${name}`;
-  const ssh = `git@${domain}:${user}/${name}`;
-  const mode = supported.has(site) ? "tar" : "git";
-  return { site, user, name, ref, url, ssh, subdir, mode };
+  let url = `https://${domain}/${user}/${name}`;
+  return { type, domain, user, name, branch, url };
 }
 //# sourceMappingURL=index.js.map
