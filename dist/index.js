@@ -57,6 +57,15 @@ var GitD = class {
       throw error;
     }
   }
+  async download(dest) {
+    console.log(this.repo);
+    try {
+      this._checkDirIsEmpty(dest);
+      await this._cloneWithTar(dest);
+    } catch (error) {
+      throw error;
+    }
+  }
   async _checkDirIsEmpty(dir) {
     try {
       const files = import_fs.default.readdirSync(dir);
@@ -75,6 +84,8 @@ var GitD = class {
   async _cloneWithGit(dest) {
     await exec(`git clone ${this.repo.url} ${dest}`);
     await exec(`rm -rf ${dest + "/.git*"}`);
+  }
+  async _cloneWithTar(dest) {
   }
 };
 function normalize(store) {

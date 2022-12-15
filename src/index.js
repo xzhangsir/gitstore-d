@@ -14,7 +14,6 @@ class GitD {
     this.src = src
     this.proxy = process.env.https_proxy
     this.force = opts.force || false
-    // this.repo = parse(src)
     this.repo = normalize(src)
     // this.mode = opts.mode || this.repo.mode
   }
@@ -27,12 +26,16 @@ class GitD {
     } catch (error) {
       throw error
     }
-
-    // const { repo } = this
-    // const dir = path.join(base, repo.site, repo.user, repo.name)
-    // await this._cloneWithGit(dest)
-
-    // console.log('clone')
+  }
+  async download(dest) {
+    console.log(this.repo)
+    try {
+      // 查看目录是不是空的
+      this._checkDirIsEmpty(dest)
+      await this._cloneWithTar(dest)
+    } catch (error) {
+      throw error
+    }
   }
   async _checkDirIsEmpty(dir) {
     try {
@@ -53,6 +56,9 @@ class GitD {
     await exec(`git clone ${this.repo.url} ${dest}`)
     // await exec(`git clone https://gitee.com/zxwaa/feisen.git ${dest}`)
     await exec(`rm -rf ${dest + '/.git*'}`)
+  }
+  async _cloneWithTar(dest) {
+    // 下载
   }
 }
 
@@ -80,44 +86,4 @@ function normalize(store) {
   }
   let url = `https://${domain}/${user}/${name}`
   return { type, domain, user, name, branch, url }
-}
-
-function parse(src) {
-  const match =
-    /^(?:(?:https:\/\/)?([^:/]+\.[^:/]+)\/|git@([^:/]+)[:/]|([^/]+):)?([^/\s]+)\/([^/\s#]+)(?:((?:\/[^/\s#]+)+))?(?:\/)?(?:#(.+))?/.exec(
-      src
-    )
-  if (!match) {
-    // throw new DegitError(`could not parse ${src}`, {
-    //   code: 'BAD_SRC'
-    // })
-  }
-
-  const site = (match[1] || match[2] || match[3] || 'github').replace(
-    /\.(com|org)$/,
-    ''
-  )
-  if (!supported.has(site)) {
-    // throw new DegitError(
-    //   `degit supports GitHub, GitLab, Sourcehut and BitBucket`,
-    //   {
-    //     code: 'UNSUPPORTED_HOST'
-    //   }
-    // )
-  }
-
-  const user = match[4]
-  const name = match[5].replace(/\.git$/, '')
-  const subdir = match[6]
-  const ref = match[7] || 'HEAD'
-
-  const domain = `${site}.${
-    site === 'bitbucket' ? 'org' : site === 'git.sr.ht' ? '' : 'com'
-  }`
-  const url = `https://${domain}/${user}/${name}`
-  const ssh = `git@${domain}:${user}/${name}`
-
-  const mode = supported.has(site) ? 'tar' : 'git'
-
-  return { site, user, name, ref, url, ssh, subdir, mode }
 }
