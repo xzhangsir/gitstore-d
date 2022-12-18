@@ -19,6 +19,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // src/index.js
 var import_fs = __toESM(require("fs"));
+var import_https = __toESM(require("https"));
 
 // src/utils.js
 var import_path = __toESM(require("path"));
@@ -49,7 +50,6 @@ var GitD = class {
     this.repo = normalize(src);
   }
   async clone(dest) {
-    console.log(this.repo);
     try {
       this._checkDirIsEmpty(dest);
       await this._cloneWithGit(dest);
@@ -82,10 +82,14 @@ var GitD = class {
     }
   }
   async _cloneWithGit(dest) {
-    await exec(`git clone ${this.repo.url} ${dest}`);
+    await exec(`git clone --depth 1 ${this.repo.url} ${dest}`);
     await exec(`rm -rf ${dest + "/.git*"}`);
   }
   async _cloneWithTar(dest) {
+    let { domain, user, name } = this.repo;
+    let url = `https://github.com/xzhangsir/vue2-core-study/archive/refs/heads/main.zip`;
+    console.log(url);
+    await fetch(url, dest);
   }
 };
 function normalize(store) {
@@ -101,5 +105,20 @@ function normalize(store) {
   }
   let url = `https://${domain}/${user}/${name}`;
   return { type, domain, user, name, branch, url };
+}
+function fetch(url, dest) {
+  return new Promise((fulfil, reject) => {
+    let options = url;
+    import_https.default.get(options, (response) => {
+      const code = response.statusCode;
+      if (code >= 400) {
+        reject({ code, message: response.statusMessage });
+      } else if (code >= 300) {
+        fetch(response.headers.location, dest).then(fulfil, reject);
+      } else {
+        response.pipe(import_fs.default.createWriteStream(dest + ".zip")).on("finish", () => fulfil()).on("error", reject);
+      }
+    }).on("error", reject);
+  });
 }
 //# sourceMappingURL=index.js.map

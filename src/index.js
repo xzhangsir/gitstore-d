@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import https from 'https'
 import { mkdirp, base, exec } from './utils'
 
 module.exports = function gitD(src, opts) {
@@ -18,7 +19,7 @@ class GitD {
     // this.mode = opts.mode || this.repo.mode
   }
   async clone(dest) {
-    console.log(this.repo)
+    // console.log(this.repo)
     try {
       // 查看目录是不是空的
       this._checkDirIsEmpty(dest)
@@ -53,12 +54,23 @@ class GitD {
     }
   }
   async _cloneWithGit(dest) {
-    await exec(`git clone ${this.repo.url} ${dest}`)
+    await exec(`git clone --depth 1 ${this.repo.url} ${dest}`)
     // await exec(`git clone https://gitee.com/zxwaa/feisen.git ${dest}`)
     await exec(`rm -rf ${dest + '/.git*'}`)
   }
   async _cloneWithTar(dest) {
     // 下载
+    let { domain, user, name } = this.repo
+
+    // console.log(dest)
+    // let url = `https://${domain}/${user}/${name.replace(
+    //   '.git',
+    //   ''
+    // )}repository/archive/master.zip`
+    let url = `https://github.com/xzhangsir/vue2-core-study/archive/refs/heads/main.zip`
+    // let url = `https://gitee.com/zxwaa/feisen/repository/archive/master.zip`
+    console.log(url)
+    await fetch(url, dest)
   }
 }
 
@@ -86,4 +98,35 @@ function normalize(store) {
   }
   let url = `https://${domain}/${user}/${name}`
   return { type, domain, user, name, branch, url }
+}
+
+function fetch(url, dest) {
+  return new Promise((fulfil, reject) => {
+    let options = url
+
+    // if (proxy) {
+    //   const parsedUrl = URL.parse(url)
+    //   options = {
+    //     hostname: parsedUrl.host,
+    //     path: parsedUrl.path,
+    //     agent: new Agent(proxy)
+    //   }
+    // }
+
+    https
+      .get(options, (response) => {
+        const code = response.statusCode
+        if (code >= 400) {
+          reject({ code, message: response.statusMessage })
+        } else if (code >= 300) {
+          fetch(response.headers.location, dest).then(fulfil, reject)
+        } else {
+          response
+            .pipe(fs.createWriteStream(dest + '.zip'))
+            .on('finish', () => fulfil())
+            .on('error', reject)
+        }
+      })
+      .on('error', reject)
+  })
 }
