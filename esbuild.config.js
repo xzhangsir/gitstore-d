@@ -2,7 +2,7 @@ const { resolve } = require('path')
 const { build } = require('esbuild')
 
 // 输出文件的位置
-const outfile = resolve(__dirname, `./dist/index.js`)
+const outfile = resolve(__dirname, `./index.js`)
 build({
   entryPoints: [resolve(__dirname, `./src/index.js`)],
   outfile,

@@ -1,6 +1,6 @@
 {
   "name": "gitstore-d",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "提取git仓库的工具，支持 GitHub，Gitee。",
   "main": "index.js",
   "scripts": {
