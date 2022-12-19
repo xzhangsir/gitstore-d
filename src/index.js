@@ -1,39 +1,28 @@
 import fs from 'fs'
 import path from 'path'
 import https from 'https'
-import { mkdirp, base, exec } from './utils'
+import { mkdirp, exec, fetchRefs } from './utils'
 
 module.exports = function gitD(src, opts) {
   return new GitD(src, opts)
 }
-// export default function gitD(src, opts) {
-//   return new GitD(src, opts)
-// }
-
 class GitD {
   constructor(src, opts = {}) {
     this.src = src
-    this.proxy = process.env.https_proxy
     this.force = opts.force || false
     this.repo = normalize(src)
-    // this.mode = opts.mode || this.repo.mode
   }
   async clone(dest) {
-    // console.log(this.repo)
     try {
-      // 查看目录是不是空的
       this._checkDirIsEmpty(dest)
-      await this._cloneWithGit(dest)
+      return await this._cloneWithGit(this.repo, dest)
     } catch (error) {
       throw error
     }
   }
-  async download(dest) {
-    console.log(this.repo)
+  async download() {
     try {
-      // 查看目录是不是空的
-      this._checkDirIsEmpty(dest)
-      await this._cloneWithTar(dest)
+      return await this._cloneWithTar(this.repo)
     } catch (error) {
       throw error
     }
@@ -45,7 +34,6 @@ class GitD {
         if (this.force) {
           await exec(`rm -rf ${dir}`)
         } else {
-          // throw new Error('目标目录不为空')
           throw '目标目录不为空'
         }
       }
@@ -53,77 +41,83 @@ class GitD {
       if (err.code !== 'ENOENT') throw err
     }
   }
-  async _cloneWithGit(dest) {
-    await exec(`git clone --depth 1 ${this.repo.url} ${dest}`)
-    // await exec(`git clone https://gitee.com/zxwaa/feisen.git ${dest}`)
+  async _cloneWithGit(repo, dest) {
+    let banch = repo.ref === 'HEAD' ? '' : `-b ${repo.ref}`
+    await exec(`git clone ${banch} --depth 1 ${repo.url} ${dest}`)
     await exec(`rm -rf ${dest + '/.git*'}`)
+    return 200
   }
-  async _cloneWithTar(dest) {
-    // 下载
-    let { domain, user, name } = this.repo
-
-    // console.log(dest)
-    // let url = `https://${domain}/${user}/${name.replace(
-    //   '.git',
-    //   ''
-    // )}repository/archive/master.zip`
-    let url = `https://github.com/xzhangsir/vue2-core-study/archive/refs/heads/main.zip`
-    // let url = `https://gitee.com/zxwaa/feisen/repository/archive/master.zip`
-    console.log(url)
-    await fetch(url, dest)
+  async _cloneWithTar(repo) {
+    const hash = await this._getHash(repo)
+    const file = `${repo.type}/${hash}.tar.gz`
+    const url =
+      repo.type === 'gitee'
+        ? `${repo.url}/repository/archive/${hash}.tar.gz`
+        : `${repo.url}/archive/${hash}.tar.gz`
+    try {
+      fs.statSync(file)
+      return 240
+    } catch (error) {
+      mkdirp(path.dirname(file))
+      await fetch(url, file)
+      return 200
+    }
+  }
+  async _getHash(repo) {
+    try {
+      const refs = await fetchRefs(repo)
+      if (repo.ref === 'HEAD') {
+        return refs.find((ref) => ref.type === 'HEAD').hash
+      }
+      return this._selectRef(refs, repo.ref)
+    } catch (err) {
+      throw err
+    }
+  }
+  _selectRef(refs, selector) {
+    for (const ref of refs) {
+      if (ref.name === selector) {
+        return ref.hash
+      }
+    }
+    if (selector.length < 8) return null
+    for (const ref of refs) {
+      if (ref.hash.startsWith(selector)) return ref.hash
+    }
   }
 }
 
-const supported = new Set([
-  'github',
-  'gitee',
-  'gitlab',
-  'bitbucket',
-  'git.sr.ht'
-])
-
-// 构造下载对象
+// 构造对象
 function normalize(store) {
-  let regex =
-    /^(?:(github|gitee|gitlab|bitbucket):)?(?:(.+):)?([^/]+)\/([^#]+)(?:#(.+))?$/
+  let regex = /^(?:(github|gitee):)?(?:(.+):)?([^/]+)\/([^#]+)(?:#(.+))?$/
   let match = regex.exec(store)
   let type = (match[1] || 'github').replace(/\.(com|org)$/, '')
   let domain = match[2] || null
   let user = match[3]
-  let name = match[4]
-  let branch = match[5] || 'main'
+  let name = match[4].replace('.git', '')
+  let ref = match[5] || 'HEAD'
 
   if (domain === null) {
-    domain = `${type}.${type === 'bitbucket' ? 'org' : 'com'}`
+    domain = `${type}.com`
   }
   let url = `https://${domain}/${user}/${name}`
-  return { type, domain, user, name, branch, url }
+  return { type, domain, user, name, ref, url }
 }
 
 function fetch(url, dest) {
-  return new Promise((fulfil, reject) => {
+  return new Promise((resolve, reject) => {
     let options = url
-
-    // if (proxy) {
-    //   const parsedUrl = URL.parse(url)
-    //   options = {
-    //     hostname: parsedUrl.host,
-    //     path: parsedUrl.path,
-    //     agent: new Agent(proxy)
-    //   }
-    // }
-
     https
       .get(options, (response) => {
         const code = response.statusCode
         if (code >= 400) {
           reject({ code, message: response.statusMessage })
         } else if (code >= 300) {
-          fetch(response.headers.location, dest).then(fulfil, reject)
+          fetch(response.headers.location, dest).then(resolve, reject)
         } else {
           response
-            .pipe(fs.createWriteStream(dest + '.zip'))
-            .on('finish', () => fulfil())
+            .pipe(fs.createWriteStream(dest))
+            .on('finish', () => resolve())
             .on('error', reject)
         }
       })

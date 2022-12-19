@@ -1,8 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { homedir, tmpdir } from 'os'
 import child_process from 'child_process'
-export const base = path.join(homedir() || tmpdir())
 
 export function mkdirp(dir) {
   const parent = path.dirname(dir)
@@ -27,4 +25,35 @@ export function exec(command) {
       resolve({ stdout, stderr })
     })
   })
+}
+
+export async function fetchRefs(repo) {
+  try {
+    const { stdout } = await exec(`git ls-remote ${repo.url}`)
+    return stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((row) => {
+        const [hash, ref] = row.split('\t')
+        if (ref === 'HEAD') {
+          return {
+            type: 'HEAD',
+            hash
+          }
+        }
+        const match = /refs\/(\w+)\/(.+)/.exec(ref)
+        return {
+          type:
+            match[1] === 'heads'
+              ? 'branch'
+              : match[1] === 'refs'
+              ? 'ref'
+              : match[1],
+          name: match[2],
+          hash
+        }
+      })
+  } catch (error) {
+    throw error
+  }
 }
