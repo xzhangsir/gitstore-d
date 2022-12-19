@@ -1,7 +1,7 @@
 {
   "name": "gitstore-d",
-  "version": "1.0.0",
-  "description": "使用node提取git仓库的下载工具，支持 GitHub，Gitee，GitLab，Bitbucket。",
+  "version": "2.0.0",
+  "description": "提取git仓库的工具，支持 GitHub，Gitee。",
   "main": "index.js",
   "scripts": {
     "start":"node ./esbuild.config.js"
@@ -24,8 +24,6 @@
     "git",
     "github",
     "gitee",
-    "gitlab",
-    "bitbucket",
     "repo",
     "repository",
     "util",
